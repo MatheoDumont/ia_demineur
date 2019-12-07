@@ -6,12 +6,11 @@ Le board est un array en 3 dimensions
 Les deux premieres (X, Y) sont les coordonnes de la case sur le board
 La 3eme contient les infos de la case
 
-0: pas d'infos
+0: decouverte
 1: mine
 2: drapeau
 3: nb mine voisine
 """
-
 
 class Demineur:
     def __init__(self, longueur=10, largeur=10, nb_mines=50):
@@ -24,6 +23,8 @@ class Demineur:
         self.nb_mines = nb_mines
 
         self.init_mines(nb_mines)
+
+        self.alive = True
 
     def init_mines(self, nb_mines):
         for i in range(nb_mines):
@@ -39,8 +40,27 @@ class Demineur:
                return x, y
 
     def place_flag(self, x, y):
+        """
+        Place un flag sur la case
+        return: False si l'action n'est pas autorise
+        """
         if self.board[x, y, 2] != 1:
             self.board[x, y, 2] = 1
             return True
         else:
             return False
+
+    def decouvrir_case(self, x, y): # TODO: trouver un meilleur nom
+        """
+        Decouvre la case (equivalent d'une clic)
+        return: False si la case a deja ete decouverte
+        """
+        if self.board[x, y, 0] != 1:
+            return False
+        else:
+            if self.board[x, y, 1] == 1:
+                self.board[x, y, 0] = 1
+                self.alive = False
+
+            self.board[x, y, 0] = 1
+            return True
