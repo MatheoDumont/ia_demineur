@@ -1,2 +1,5 @@
+from demineur import Demineur
+
 if __name__ == "__main__":
-    pass
+    demineur = Demineur()
+    print(demineur.board[:, :, 1])
