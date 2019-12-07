@@ -39,10 +39,8 @@ class Demineur:
                return x, y
 
     def place_flag(self, x, y):
-        if self.board[x, y, 2] != 2:
-            self.board[x, y, 2] = 2
+        if self.board[x, y, 2] != 1:
+            self.board[x, y, 2] = 1
             return True
         else:
             return False
-
-
