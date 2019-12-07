@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-""" 
+"""
 Le board est un array en 3 dimensions
 Les deux premieres (X, Y) sont les coordonnes de la case sur le board
 La 3eme contient les infos de la case
@@ -11,6 +11,7 @@ La 3eme contient les infos de la case
 2: drapeau
 3: nb mine voisine
 """
+
 
 class Demineur:
     def __init__(self, longueur=10, largeur=10, nb_mines=50):
@@ -36,3 +37,12 @@ class Demineur:
 
             if self.board[x, y, 1] != 1:
                return x, y
+
+    def place_flag(self, x, y):
+        if self.board[x, y, 2] != 2:
+            self.board[x, y, 2] = 2
+            return True
+        else:
+            return False
+
+
