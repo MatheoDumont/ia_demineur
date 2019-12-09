@@ -129,5 +129,7 @@ class Demineur:
     def is_resolve(self):
         """
         return: True si le demineur est resolue
+        CAD: si toutes les cases m'etant pas une bombe ont ete revelees.
+        
         """
         return np.sum(self.board[:, :, 1] + self.board[:, :, 0]) == self.length * self.width
