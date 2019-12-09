@@ -130,4 +130,4 @@ class Demineur:
         """
         return: True si le demineur est resolue
         """
-        return np.sum(-(self.board[:, :, 1] - self.board[:, :, 2])) == 0
+        return np.sum(self.board[:, :, 1] + self.board[:, :, 0]) == self.length * self.width
