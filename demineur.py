@@ -14,33 +14,34 @@ La 3eme contient les infos de la case
 4: vision (vision cad que l'on a clique sur une case adjacente) TODO: a ameliorer
 """
 
-class Demineur:
-    def __init__(self, longueur=10, largeur=10, nb_mines=50):
-        self.board = np.zeros((longueur, largeur, 5))
-        self.board[:, :, 0] = np.ones((longueur, largeur))
 
-        self.longueur = longueur
-        self.largeur = largeur
+class Demineur:
+    def __init__(self, length=10, width=10, nb_mines=50):
+        self.board = np.zeros((length, width, 5))
+        self.board[:, :, 0] = np.ones((length, width))
+
+        self.length = length
+        self.width = width
 
         self.nb_mines = nb_mines
 
         self.init_mines(nb_mines)
-        self.fill_coll_mines_voisines()
+        self.fill_coll_neighbor_mines()
 
         self.alive = True
 
     def init_mines(self, nb_mines):
         for i in range(nb_mines):
-            x, y = self.getCaseVide()
+            x, y = self.get_empty_case()
             self.board[x, y, 1] = 1
 
-    def getCaseVide(self):
+    def get_empty_case(self):
         while True:
-            x = random.randint(0, self.longueur -1)
-            y = random.randint(0, self.largeur -1)
+            x = random.randint(0, self.length - 1)
+            y = random.randint(0, self.width - 1)
 
             if self.board[x, y, 1] != 1:
-               return x, y
+                return x, y
 
     def place_flag(self, x, y):
         """
@@ -54,7 +55,7 @@ class Demineur:
         else:
             return False
 
-    def decouvrir_case(self, x, y): # TODO: trouver un meilleur nom
+    def discover_case(self, x, y):  # TODO: trouver un meilleur nom
         """
         Decouvre la case (equivalent d'une clic)
         return: False si la case a deja ete decouverte
@@ -71,14 +72,14 @@ class Demineur:
             return True
 
     def extend_vision(self, x, y):
-        if x + 1 < self.longueur:
-            self.board[x+1, y, 4] = 1
+        if x + 1 < self.length:
+            self.board[x + 1, y, 4] = 1
         if x - 1 >= 0:
-            self.board[x-1, y, 4] = 1
-        if y + 1 < self.longueur:
-            self.board[x, y+1, 4] = 1
+            self.board[x - 1, y, 4] = 1
+        if y + 1 < self.length:
+            self.board[x, y + 1, 4] = 1
         if y - 1 >= 0:
-            self.board[x, y-1, 4] = 1
+            self.board[x, y - 1, 4] = 1
 
     def get_player_board(self):
         """
@@ -86,13 +87,13 @@ class Demineur:
         """
         # n'affiche que les cases sur lequels on a la vision
         t = self.board[:, :, 3] * self.board[:, :, 4]
+        
         # rajoute les drapeaux
         t = t - t * self.board[:, :, 2] + self.board[:, :, 2]
 
         return t
 
-    def fill_coll_mines_voisines(self):
-        pass
+    def fill_coll_neighbor_mines(self):
         kernel = np.array(
             [
                 [1, 1, 1],
@@ -104,7 +105,7 @@ class Demineur:
         self.board[:, :, 3] = convolve2d(self.board[:, :, 1], kernel, "same")
 
     # TODO
-    def resolue(self):
+    def is_resolve(self):
         """
         return: True si le demineur est resolue
         """
