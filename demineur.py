@@ -86,13 +86,22 @@ class Demineur:
         """
         # n'affiche que les cases sur lequels on a la vision
         t = self.board[:, :, 3] * self.board[:, :, 4]
-        # rajoute les drapeaux
-        t = t - t * self.board[:, :, 2] + self.board[:, :, 2]
+
+        # get des cases a drapeaux
+        cases_drapeau = - (self.board[:, :, 2] - 1)
+
+        # remise a zero des cases a drapeaux et on met les cases a drapeaux a -1 pour pouvoir les distingues ensuite
+        # case = -1 => drapeaux
+        #      = 0 on sais rien
+        #      > 0 nombre de mines voisines
+        # TODO: gerer la difference entre une case deja clique qui est vide et une case ou on a pas la vision
+        t = t * cases_drapeau - self.board[:, :, 2]
 
         return t
 
     def fill_coll_mines_voisines(self):
         pass
+        print("dfd;d;flksfsd;flkdsf;dskdsf;ldsk")
         kernel = np.array(
             [
                 [1, 1, 1],
