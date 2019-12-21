@@ -2,8 +2,10 @@ from demineur import Demineur
 
 import numpy as np
 import random
+from rl import RL
 
-if __name__ == "__main__":
+
+def test():
     demineur = Demineur(nb_mines=30)
     print(demineur.board[:, :, 1])
     print(demineur.board[:, :, 3])
@@ -14,10 +16,19 @@ if __name__ == "__main__":
         # print(demineur.board[:, :, 4])
         autorise = False
         while not autorise:
-            x = random.randint(0, 10-1)
-            y = random.randint(0, 10-1)
+            x = random.randint(0, 10 - 1)
+            y = random.randint(0, 10 - 1)
 
             if demineur.board[x, y, 1] != 1:
                 autorise = demineur.decouvrir_case(x, y)
 
     print("Perdu !!")
+
+
+def reinforc():
+    r = RL()
+    r.train()
+
+
+if __name__ == "__main__":
+    reinforc()
