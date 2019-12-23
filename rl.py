@@ -4,6 +4,8 @@ Q(St, At) = Q(St, At)old + lr * (r + Y * max(at+1)(Q(St`, At`)) - Q(St, At)old)
 """
 from demineur import *
 from itertools import product
+import numpy as np
+import random
 
 
 class RL(object):
@@ -52,11 +54,11 @@ class RL(object):
                 self.key_window[action][0] + w_pos[0],
                 self.key_window[action][1] + w_pos[1]
             )
-        print(action)
 
         return action, reward[1]
 
     def hash_state(self, state):
+
         hashage = ""
 
         for row in range(self.w_size):
@@ -72,21 +74,25 @@ class RL(object):
         """
         window = []
         rng = -(self.w_size // 2)
+        col = rng + w[1]
+
         for i in range(self.w_size):
             row = rng + i + w[0]
-            window.append(board[row][w[1]:self.w_size + 1])
+            window.append(board[row][col:col + self.w_size])
 
-        return window
+        return np.array(window)
 
     def move_window(self, w, demineur):
         marge = self.w_size // 2
 
-        if w[1] + marge == demineur.width:
+        if w[0] + marge == demineur.length - 1 and w[1] + marge == demineur.width - 1:
             w[1] = marge
             w[0] += 1
-        elif w[0] + marge == demineur.length and w[1] + marge == demineur.width:
+        elif w[1] + marge == demineur.width - 1:
             w[0] = marge
             w[1] = marge
+        else:
+            w[1] += 1
 
         return w
 
@@ -105,16 +111,16 @@ class RL(object):
     def train(self):
         demineur = Demineur()
         epsilon = 0.9
-        w_pos = (self.w_size // 2, self.w_size // 2)
         nb_win = 0
         nb_total = 0
         reward = []
 
         for epoch in range(10000):
+            w_pos = [self.w_size // 2, self.w_size // 2]
             s = self.get_window(w_pos, demineur.get_player_board())
 
             while demineur.alive and not demineur.is_resolve():
-                print(demineur.get_player_board())
+
                 """
                 1) On calcule un premier etat s auquel on associe une action a
                     - pour choisir l'action, en fonction d'epsilon et d'un nombre aleatoire
@@ -123,6 +129,7 @@ class RL(object):
                 2) A partir de cet action a et cette etat s, on calcule l'etat
                    s+1 avec l'action a`
                 """
+                print(demineur.get_player_board())
 
                 a, r = self.pick_action(s, epsilon, demineur, w_pos)
                 n_s = self.get_window(w_pos, demineur.get_player_board())
@@ -146,7 +153,7 @@ class RL(object):
                 print("             EPOCH ", epoch)
                 print("total = ", nb_total)
                 print("nb_win = ", nb_win)
-                print("mean reward = ", nb.mean(np.array(reward)))
+                print("mean reward = ", np.mean(np.array(reward)))
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
             # on recharge le demineur

@@ -18,7 +18,7 @@ La 3eme contient les infos de la case
 class Demineur:
     def __init__(self, length=10, width=10, nb_mines=20):
         self.board = np.zeros((length, width, 5), dtype="int8")
-        self.board[:, :, 0] = np.ones((length, width))
+        # self.board[:, :, 0] = np.ones((length, width), dtype="int8")
 
         self.length = length
         self.width = width
@@ -89,10 +89,10 @@ class Demineur:
                 self.board[x, y, 0] = 1
                 self.alive = False
                 return True, -1
-
-            self.board[x, y, 0] = 1
-            self._extend_vision(x, y)
-            return True, 1
+            else:
+                self.board[x, y, 0] = 1
+                self._extend_vision(x, y)
+                return True, 1
 
     def get_player_board(self):
         """
