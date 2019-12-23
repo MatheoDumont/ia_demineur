@@ -22,6 +22,7 @@ def test():
             if demineur.board[x, y, 1] != 1:
                 demineur.discover_case(x, y)
                 break
+        input()
 
     print("Perdu !!")
 
@@ -32,4 +33,4 @@ def reinforc():
 
 
 if __name__ == "__main__":
-    reinforc()
+    test()

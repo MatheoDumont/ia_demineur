@@ -36,7 +36,7 @@ class RL(object):
             for i in range(self.w_size**2):
                 self.Q[hashage].append(0)
 
-        if random.random() < epsilon:
+        if random.uniform(0, 1) < epsilon:
             # exploration
             action = int(random.uniform(0, self.w_size**2))
 
@@ -86,11 +86,11 @@ class RL(object):
         marge = self.w_size // 2
 
         if w[0] + marge == demineur.length - 1 and w[1] + marge == demineur.width - 1:
-            w[1] = marge
-            w[0] += 1
-        elif w[1] + marge == demineur.width - 1:
             w[0] = marge
             w[1] = marge
+        elif w[1] + marge == demineur.width - 1:
+            w[1] = marge
+            w[0] += 1
         else:
             w[1] += 1
 
@@ -110,14 +110,16 @@ class RL(object):
 
     def train(self):
         demineur = Demineur()
-        epsilon = 0.9
         nb_win = 0
         nb_total = 0
         reward = []
+        epsilon = 0.9
 
         for epoch in range(10000):
             w_pos = [self.w_size // 2, self.w_size // 2]
             s = self.get_window(w_pos, demineur.get_player_board())
+            past = None
+            count_same = 0
 
             while demineur.alive and not demineur.is_resolve():
 
@@ -129,7 +131,6 @@ class RL(object):
                 2) A partir de cet action a et cette etat s, on calcule l'etat
                    s+1 avec l'action a`
                 """
-                print(demineur.get_player_board())
 
                 a, r = self.pick_action(s, epsilon, demineur, w_pos)
                 n_s = self.get_window(w_pos, demineur.get_player_board())
@@ -140,15 +141,25 @@ class RL(object):
                 reward.append(r)
                 reward.append(n_r)
 
-                epsilon = max(0.1, epsilon * 0.996)
+                epsilon = max(0.1, epsilon * 0.999)
                 w_pos = self.move_window(w_pos, demineur)
                 s = self.get_window(w_pos, demineur.get_player_board())
+
+                current = demineur.get_player_board()
+                if (current == past).all and past is not None:
+                    count_same += 1
+                    if count_same == demineur.length * 10:
+                        # print(current)
+                        # print(epoch)
+                        demineur.alive = False
+                        count_same = 0
+                past = current
 
             if demineur.is_resolve():
                 nb_win += 1
             nb_total += 1
 
-            if epoch % 10 == 0:
+            if epoch % 100 == 0:
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 print("             EPOCH ", epoch)
                 print("total = ", nb_total)
@@ -158,3 +169,18 @@ class RL(object):
 
             # on recharge le demineur
             demineur = Demineur()
+
+        # on joue
+        w_pos = [1, 1]
+        demineur = Demineur()
+        print(demineur.get_player_board())
+        while True:
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            print("position des bombes: ")
+            print(demineur.board[:, :, 1])
+            print("Board: ")
+            print(demineur.get_player_board())
+            s = self.get_window(w_pos, demineur.get_player_board())
+            n_a, n_r = self.pick_action(s, 0, demineur, w_pos)
+            w_pos = self.move_window(w_pos, demineur)
+            input()

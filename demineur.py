@@ -16,7 +16,7 @@ La 3eme contient les infos de la case
 
 
 class Demineur:
-    def __init__(self, length=10, width=10, nb_mines=20):
+    def __init__(self, length=10, width=10, nb_mines=10):
         self.board = np.zeros((length, width, 5), dtype="int8")
         # self.board[:, :, 0] = np.ones((length, width), dtype="int8")
 
@@ -55,15 +55,20 @@ class Demineur:
 
         self.board[:, :, 3] = convolve2d(self.board[:, :, 1], kernel, "same")
 
+    def _if_no_bomb_near(self, x, y):
+        if self.board[x, y, 1] != 1:
+            self.board[x, y, 4] = 1
+
     def _extend_vision(self, x, y):
+
         if x + 1 < self.length:
-            self.board[x + 1, y, 4] = 1
+            self._if_no_bomb_near(x + 1, y)
         if x - 1 >= 0:
-            self.board[x - 1, y, 4] = 1
-        if y + 1 < self.width:  # etait a self.length
-            self.board[x, y + 1, 4] = 1
+            self._if_no_bomb_near(x - 1, y)
+        if y + 1 < self.width:
+            self._if_no_bomb_near(x, y + 1)
         if y - 1 >= 0:
-            self.board[x, y - 1, 4] = 1
+            self._if_no_bomb_near(x, y - 1)
 
     def place_flag(self, x, y):
         """
@@ -73,7 +78,7 @@ class Demineur:
         if self.board[x, y, 2] != 1 and self.board[x, y, 0] != 1:
             self.board[x, y, 2] = 1
             self._extend_vision(x, y)
-            return True, 1
+            return True, 0
         else:
             return False, -1
 
@@ -131,6 +136,6 @@ class Demineur:
         """
         return: True si le demineur est resolue
         CAD: si toutes les cases m'etant pas une bombe ont ete revelees.
-        
+
         """
         return np.sum(self.board[:, :, 1] + self.board[:, :, 0]) == self.length * self.width
