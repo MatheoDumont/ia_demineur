@@ -11,27 +11,26 @@ La 3eme contient les infos de la case
 1: mine
 2: drapeau
 3: nb mine voisine
-4: vision (vision cad que l'on a clique sur une case adjacente) TODO: a ameliorer
 """
 
 
 class Demineur:
-    def __init__(self, length=10, width=10, nb_mines=10):
-        self.board = np.zeros((length, width, 5), dtype="int8")
-        # self.board[:, :, 0] = np.ones((length, width), dtype="int8")
+    def __init__(self, length=15, width=15, nb_mines=None):
+        self.board = np.zeros((length, width, 4), dtype="int8")
 
         self.length = length
         self.width = width
 
-        self.nb_mines = nb_mines
+        default = (self.length + self.width) * 2
+        self.nb_mines = default if nb_mines is None else nb_mines
 
-        self._init_mines(nb_mines)
+        self._init_mines()
         self._fill_coll_neighbor_mines()
 
         self.alive = True
 
-    def _init_mines(self, nb_mines):
-        for i in range(nb_mines):
+    def _init_mines(self):
+        for i in range(self.nb_mines):
             x, y = self._get_empty_case()
             self.board[x, y, 1] = 1
 
@@ -57,18 +56,40 @@ class Demineur:
 
     def _if_no_bomb_near(self, x, y):
         if self.board[x, y, 1] != 1:
-            self.board[x, y, 4] = 1
+            self.board[x, y, 0] = 1
 
     def _extend_vision(self, x, y):
+        # methode appelee apres discover_case()
+        
+        def propagate(_from, on):
+            # si pas dans le tableau
+            if on[0] < 0 or on[0] >= self.width or on[1] < 0 or on[1] >= self.length:
+                return
+            # si je suis deja visible
+            if self.board[on[0], on[1], 0] == 1:
+                return
+            # si je suis une bombe
+            if self.board[on[0], on[1], 1] == 1:
+                return
+            # si je suis un drapeau
+            if self.board[on[0], on[1], 2] == 1:
+                return
 
-        if x + 1 < self.length:
-            self._if_no_bomb_near(x + 1, y)
-        if x - 1 >= 0:
-            self._if_no_bomb_near(x - 1, y)
-        if y + 1 < self.width:
-            self._if_no_bomb_near(x, y + 1)
-        if y - 1 >= 0:
-            self._if_no_bomb_near(x, y - 1)
+            if self.board[on[0], on[1], 3] == 0:
+                self.board[on[0], on[1], 0] = 1
+
+                for r in range(on[0] - 1, on[0] + 2):
+                    for c in range(on[1] - 1, on[1] + 2):
+                        if r != _from[0] or c != _from[1]:
+                            propagate(on, (r, c))
+            else:
+                self.board[on[0], on[1], 0] = 1
+            return
+
+        for r in range(x - 1, x + 2):
+            for c in range(y - 1, y + 2):
+                if r != x or c != y:
+                    propagate((x, y), (r, c))
 
     def place_flag(self, x, y):
         """
@@ -78,6 +99,14 @@ class Demineur:
         if self.board[x, y, 2] != 1 and self.board[x, y, 0] != 1:
             self.board[x, y, 2] = 1
             self._extend_vision(x, y)
+            return True, 0
+        else:
+            return False, -1
+
+    def remove_flag(self, x, y):
+        
+        if self.board[x, y, 2] == 1:
+            self.board[x, y, 2] = 0
             return True, 0
         else:
             return False, -1
@@ -99,7 +128,7 @@ class Demineur:
                 self._extend_vision(x, y)
                 return True, 1
 
-    def get_player_board(self):
+    def _gpb_numpy(self):
         """
         return: le board de la vue du joueur
         de la forme : 
@@ -116,7 +145,7 @@ class Demineur:
 
         # n'affiche que les cases sur lequels on a la vision
         # case avec nombre de bombe au alentour si vision
-        t = self.board[:, :, 3] * self.board[:, :, 4]
+        t = self.board[:, :, 3] * self.board[:, :, 0]
 
         # get des cases a drapeaux
         # si flag, case = 0
@@ -131,6 +160,27 @@ class Demineur:
         t = t * cases_drapeau - self.board[:, :, 2]
 
         return t
+
+    def _gpb_loop(self):
+
+        array = []
+        for r in range(self.width):
+            array.append([])
+            for c in range(self.length):
+                if self.board[r, c, 0] == 1:
+                    if self.board[r, c, 1] == 1:
+                        array[r].append("*")
+                    else:
+                        array[r].append(self.board[r, c, 3])
+                elif self.board[r, c, 2] == 1:
+                    array[r].append(-1)
+                else:
+                    array[r].append(".")
+
+        return np.array(array)
+
+    def get_player_board(self, type=None):
+        return self._gpb_numpy() if type is None else self._gpb_loop()
 
     def is_resolve(self):
         """
