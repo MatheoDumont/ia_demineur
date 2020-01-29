@@ -63,6 +63,16 @@ class RL(object):
             for i in range(1, self.nb_action + 1):
                 self.key_window.append((p[0], p[1], i))
 
+    def load_Q_table(self, new_q):
+        """
+        il faut que les etats dans new_q aient ete fait pour la taille actuelle
+        self.w_size
+        """
+        assert isinstance(list(new_q)[0], str)
+        assert len(list(new_q)[0]) >= self.w_size**2
+        assert len(list(new_q)[0]) < (self.w_size + 1)**2
+        self.Q = new_q
+
     def create_state(self, hashage):
         self.Q[hashage] = []
         for i in range(self.w_size**2 * self.nb_action):
@@ -233,12 +243,12 @@ class RL(object):
             # pour entrainer a partir d'autre etat
             # (si on place un flag, l'algo ne saura pas quoi entrainer)
 
-            if action == 1: 
+            if action == 1:
                 # placer un flag
                 to_place = -1
                 to_place_second = demineur.board[abs_pos[0], abs_pos[1], 3]
                 second_action = 3
-            elif action == 3:  
+            elif action == 3:
                 # remove flag
                 to_place = demineur.board[abs_pos[0], abs_pos[1], 3]
                 to_place_second = -1
@@ -257,8 +267,9 @@ class RL(object):
             self.update_Q(s, a, reward, n_s, n_a)
 
             # reward pour remove flag'
-            second_a = get_action(relativ_pos[0], relativ_pos[1], second_action)
-            
+            second_a = get_action(
+                relativ_pos[0], relativ_pos[1], second_action)
+
             s = n_s
             n_s[relativ_pos[0], relativ_pos[1]] = to_place_second
 
@@ -298,14 +309,14 @@ class RL(object):
             else:
                 w = self.move_window(w, demineur)
 
-    def train(self):
+    def train(self, n, play_after=False):
         demineur = Demineur()
         nb_win = 0
         nb_total = 0
         reward = []
         epsilon = 0.9
 
-        for epoch in range(100000):
+        for epoch in range(n):
             w_pos = [self.w_size // 2, self.w_size // 2]
             s = self.get_window(w_pos, demineur.get_player_board())
             past = None
@@ -352,9 +363,7 @@ class RL(object):
             elif not demineur.alive:
                 self.teach_for_death(s, a)
 
-            nb_total += 1
-
-            if epoch % 100 == 0:
+            if epoch != 0 and epoch % 100 == 0:
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 print("             EPOCH ", epoch)
                 print("total = ", nb_total)
@@ -363,9 +372,13 @@ class RL(object):
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 reward = []
 
+            nb_total += 1
             # on recharge le demineur
             demineur = Demineur()
+        if play_after:
+            self.play()
 
+    def play(self):
         # on joue
         w_pos = [self.w_size // 2, self.w_size // 2]
         demineur = Demineur()

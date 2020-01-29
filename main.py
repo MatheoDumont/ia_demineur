@@ -56,7 +56,7 @@ def play():
 
 def reinforc():
     r = RL()
-    r.train()
+    r.train(100000, True)
 
 
 def bench():
