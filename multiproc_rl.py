@@ -37,6 +37,21 @@ def ite(n, n_proc, q_table=None):
     return return_list
 
 
+def train_best_reward(it):
+    """
+    prend bien plus de temps car rapidement, la table de Q learning permet 
+    de rester en vie plus longtemps et donc les entrainements sur 100 games
+    prennent plus de temps
+    """
+    rewards = []
+
+    for rl in it:
+        rewards.append(np.mean(np.array(rl.reward)))
+
+    best = it[np.argmax(rewards)]
+    return best.Q
+
+
 def train_multiproc_mean(it):
 
     map_by_key = {}
@@ -66,19 +81,19 @@ def train_multiproc_mean(it):
 
 def train_multiproc(epoch, n):
     # train une fois
-    n_proc = 8
+    n_proc = 7
     total = 0
     reward = 0
     win = 0
 
     # premiere iteration pour init
     it = ite(n, n_proc)
-    Q_table = train_multiproc_mean(it)
+    Q_table = train_best_reward(it)
 
     for i in range(epoch - 1):
         it = ite(n, n_proc, Q_table)
-        
-        Q_table = train_multiproc_mean(it)
+
+        Q_table = train_best_reward(it)
         total += n * n_proc
 
         win += reduce(lambda x, y: x + y, [rl.nb_win for rl in it])
@@ -94,4 +109,4 @@ def train_multiproc(epoch, n):
 
 
 if __name__ == '__main__':
-    train_multiproc(100, 100)
+    train_multiproc(1000, 100)
