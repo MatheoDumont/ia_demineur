@@ -41,7 +41,11 @@ DONE:
 
 class RL(object):
 
-    def __init__(self):
+    def __init__(self, reset_reward=True, print_result=True):
+        """
+        reset_reward = each 100 games, reset reward
+        print_result = print result each 100 games
+        """
         super().__init__()
         self.Q = {}
         self.w_size = 3
@@ -62,6 +66,12 @@ class RL(object):
         for p in pair_pos:
             for i in range(1, self.nb_action + 1):
                 self.key_window.append((p[0], p[1], i))
+
+        self.nb_win = 0
+        self.nb_total = 0
+        self.reward = []
+        self.reset_reward = reset_reward
+        self.print_result = print_result
 
     def load_Q_table(self, new_q):
         """
@@ -311,9 +321,9 @@ class RL(object):
 
     def train(self, n, play_after=False):
         demineur = Demineur()
-        nb_win = 0
-        nb_total = 0
-        reward = []
+        # self.nb_win = 0
+        # self.nb_total = 0
+        # self.reward = []
         epsilon = 0.9
 
         for epoch in range(n):
@@ -338,8 +348,8 @@ class RL(object):
                 n_a, n_r = self.pick_action(n_s, epsilon, demineur, w_pos)
 
                 self.update_Q(s, a, r, n_s, n_a)
-                reward.append(r)
-                reward.append(n_r)
+                self.reward.append(r)
+                self.reward.append(n_r)
 
                 epsilon = max(0.1, epsilon * 0.999)
                 if demineur.alive:
@@ -359,20 +369,22 @@ class RL(object):
                 past = current
 
             if demineur.is_resolve():
-                nb_win += 1
+                self.nb_win += 1
             elif not demineur.alive:
                 self.teach_for_death(s, a)
 
-            if epoch != 0 and epoch % 100 == 0:
-                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                print("             EPOCH ", epoch)
-                print("total = ", nb_total)
-                print("nb_win = ", nb_win)
-                print("mean reward = ", np.mean(np.array(reward)))
-                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                reward = []
+            if self.print_result:
+                if epoch != 0 and epoch % 100 == 0:
+                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                    print("             EPOCH ", epoch)
+                    print("total = ", self.nb_total)
+                    print("nb_win = ", self.nb_win)
+                    print("mean reward = ", np.mean(np.array(self.reward)))
+                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                    if self.reset_reward:
+                        self.reward = []
 
-            nb_total += 1
+            self.nb_total += 1
             # on recharge le demineur
             demineur = Demineur()
         if play_after:

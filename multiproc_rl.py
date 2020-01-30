@@ -1,19 +1,30 @@
 from rl import RL
-from multiprocessing import Process
+from multiprocessing import Process, Manager
+import numpy as np
+from functools import reduce
 
 
-def ite():
-    n_proc = 7
+def ite_one_proc(return_list, n, q_table=None):
+    rl = RL(False, False)
 
-    # init rl
-    rls = []
-    for i in range(n_proc):
-        rls.append(RL())
+    if q_table is not None:
+        rl.load_Q_table(q_table)
+
+    rl.train(n)
+
+    return_list.append(rl)
+
+
+def ite(n, n_proc, q_table=None):
+
+    manager = Manager()
+    return_list = manager.list()
 
     # init proc
     procs = []
     for i in range(n_proc):
-        procs.append(Process(target=rls[i].train, args=[101, False]))
+        procs.append(Process(target=ite_one_proc,
+                             args=[return_list, n, q_table]))
 
     # launch proc
     for i in range(n_proc):
@@ -23,7 +34,7 @@ def ite():
     for i in range(n_proc):
         procs[i].join()
 
-    return rls
+    return return_list
 
 
 def train_multiproc_mean(it):
@@ -43,19 +54,44 @@ def train_multiproc_mean(it):
         else:
             new_val_by_actions = val[0]
             for others in val[1::]:
-                for i in range(others):
+                for i in range(len(others)):
                     new_val_by_actions[i] += others[i]
 
             d = len(val)
-            for i in range(new_val_by_actions):
+            for i in range(len(new_val_by_actions)):
                 new_val_by_actions[i] /= d
 
+    return new_Q_table
 
-def train_multiproc(n):
 
-    for i in range(n):
-        pass
+def train_multiproc(epoch, n):
+    # train une fois
+    n_proc = 8
+    total = 0
+    reward = 0
+    win = 0
+
+    # premiere iteration pour init
+    it = ite(n, n_proc)
+    Q_table = train_multiproc_mean(it)
+
+    for i in range(epoch - 1):
+        it = ite(n, n_proc, Q_table)
+        
+        Q_table = train_multiproc_mean(it)
+        total += n * n_proc
+
+        win += reduce(lambda x, y: x + y, [rl.nb_win for rl in it])
+        res = []
+        for rl in it:
+            res += rl.reward
+        reward = np.mean(np.array(res))
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("             EPOCH ", i)
+        print("total = ", total)
+        print("nb_win = ", win)
+        print("mean reward = ", reward)
 
 
 if __name__ == '__main__':
-    train_multiproc_mean()
+    train_multiproc(100, 100)
