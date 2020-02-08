@@ -3,6 +3,7 @@ from demineur import Demineur
 import numpy as np
 import random
 from rl import RL
+from drl import DRL
 import time
 
 
@@ -59,6 +60,11 @@ def reinforc():
     r.train(100000, True)
 
 
+def DQL():
+    r = DRL()
+    r.train(10000, True)
+
+
 def bench():
     demineur = Demineur()
 
@@ -74,4 +80,4 @@ def bench():
 
 
 if __name__ == "__main__":
-    reinforc()
+    DQL()
